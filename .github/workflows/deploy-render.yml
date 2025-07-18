@@ -1,0 +1,94 @@
+name: Deploy Backend to Render
+
+on:
+  push:
+    branches: [ master ]
+    paths: [ 'backend/**' ]
+  workflow_dispatch:
+
+env:
+  RENDER_SERVICE_NAME: xlook-backend
+  RENDER_REGION: oregon
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'backend/package-lock.json'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        npm ci
+
+    - name: Build application
+      run: |
+        cd backend
+        npm run build
+
+    - name: Deploy to Render
+      env:
+        RENDER_API_TOKEN: ${{ secrets.RENDER_API_TOKEN }}
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+        GOOGLE_SAFE_BROWSING_API_KEY: ${{ secrets.GOOGLE_SAFE_BROWSING_API_KEY }}
+        IPINFO_API_KEY: ${{ secrets.IPINFO_API_KEY }}
+      run: |
+        curl -X POST "https://api.render.com/v1/services" \
+        -H "Authorization: Bearer $RENDER_API_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{
+          "name": "xlook-backend",
+          "repo": "https://github.com/ranit004/xLooK.git",
+          "type": "web_service",
+          "env": "node",
+          "region": "oregon",
+          "plan": "free",
+          "buildCommand": "cd backend && npm install && npm run build",
+          "startCommand": "cd backend && npm start",
+          "rootDir": "backend",
+          "envVars": [
+            {
+              "key": "NODE_ENV",
+              "value": "production"
+            },
+            {
+              "key": "PORT",
+              "value": "10000"
+            },
+            {
+              "key": "ALLOWED_ORIGIN",
+              "value": "https://xlook-orm7keo62-ranitisking-gmailcoms-projects.vercel.app"
+            },
+            {
+              "key": "MONGO_URI",
+              "value": "'"$MONGO_URI"'"
+            },
+            {
+              "key": "VIRUSTOTAL_API_KEY",
+              "value": "'"$VIRUSTOTAL_API_KEY"'"
+            },
+            {
+              "key": "GOOGLE_SAFE_BROWSING_API_KEY",
+              "value": "'"$GOOGLE_SAFE_BROWSING_API_KEY"'"
+            },
+            {
+              "key": "IPINFO_API_KEY",
+              "value": "'"$IPINFO_API_KEY"'"
+            }
+          ]
+        }'
+
+    - name: Wait for deployment
+      run: |
+        echo "Deployment initiated. Check Render dashboard for progress."
+        echo "Dashboard: https://dashboard.render.com"
