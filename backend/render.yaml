@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: xlook-backend
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        generateValue: true
+      - key: UNSPLASH_ACCESS_KEY
+        generateValue: true
+      - key: MONGODB_URI
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
