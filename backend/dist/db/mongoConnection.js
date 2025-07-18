@@ -4,9 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
-const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/urlSafety';
+const env_1 = __importDefault(require("../config/env"));
+const mongoUri = env_1.default.MONGO_URI;
 const validateMongoUri = (uri) => {
     const mongoUriRegex = /^mongodb(?:\+srv)?:\/\/.+/;
     return mongoUriRegex.test(uri);
@@ -21,11 +20,10 @@ const connectToMongoDB = async () => {
             maxPoolSize: 10,
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
-            bufferMaxEntries: 0,
             bufferCommands: false,
         });
         console.log('🍃 Successfully connected to MongoDB Atlas');
-        console.log(`📊 Database: ${mongoose_1.default.connection.db.databaseName}`);
+        console.log(`📊 Database: ${mongoose_1.default.connection.db?.databaseName || 'Unknown'}`);
         mongoose_1.default.connection.on('error', (error) => {
             console.error('❌ MongoDB connection error:', error.message);
         });
@@ -53,7 +51,6 @@ const connectToMongoDB = async () => {
                 console.error('IP Whitelist error: Add your IP address to MongoDB Atlas network access list.');
             }
         }
-        process.exit(1);
     }
 };
 process.on('SIGINT', async () => {

@@ -1,11 +1,11 @@
 import mongoose, { Document } from 'mongoose';
 export interface IUser extends Document {
-    clerkId: string;
     email: string;
+    hashedPassword: string;
     name: string;
     plan: 'free' | 'premium' | 'pro';
     createdAt: Date;
-    updatedAt: Date;
+    comparePassword(password: string): Promise<boolean>;
 }
 declare const User: mongoose.Model<IUser, {}, {}, {}, mongoose.Document<unknown, {}, IUser, {}> & IUser & Required<{
     _id: unknown;

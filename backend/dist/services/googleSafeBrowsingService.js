@@ -5,12 +5,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.googleSafeBrowsingService = void 0;
 const axios_1 = __importDefault(require("axios"));
+const env_1 = __importDefault(require("../config/env"));
 class GoogleSafeBrowsingService {
     constructor() {
-        this.apiKey = process.env.GOOGLE_SAFE_BROWSING_API_KEY || '';
-        this.baseUrl = process.env.GOOGLE_SAFE_BROWSING_API_URL || 'https://safebrowsing.googleapis.com/v4';
+        this.apiKey = env_1.default.GOOGLE_SAFE_BROWSING_API_KEY;
+        this.baseUrl = env_1.default.GOOGLE_SAFE_BROWSING_API_URL;
         if (!this.apiKey || this.apiKey === 'your_google_safe_browsing_api_key_here') {
             console.warn('⚠️ Google Safe Browsing API key not configured. Using mock data.');
+        }
+        else {
+            console.log('✅ Google Safe Browsing API key configured successfully');
         }
     }
     async checkUrl(url) {

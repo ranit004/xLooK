@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.whoisService = void 0;
-const whois_1 = __importDefault(require("whois"));
+const whois = require('whois');
 const url_1 = require("url");
 class WhoisService {
     async lookupDomain(url) {
@@ -22,7 +19,7 @@ class WhoisService {
     }
     performWhoisLookup(domain) {
         return new Promise((resolve, reject) => {
-            whois_1.default.lookup(domain, (err, data) => {
+            whois.lookup(domain, (err, data) => {
                 if (err) {
                     reject(err);
                 }
@@ -87,13 +84,16 @@ class WhoisService {
         for (const line of lines) {
             const lowerLine = line.toLowerCase();
             if (lowerLine.includes('registrar:') || lowerLine.includes('sponsoring registrar:')) {
-                data.registrar = this.extractValue(line);
+                const value = this.extractValue(line);
+                data.registrar = value || undefined;
             }
             if (lowerLine.includes('creation date:') || lowerLine.includes('created:') || lowerLine.includes('registered:')) {
-                data.registrationDate = this.extractValue(line);
+                const value = this.extractValue(line);
+                data.registrationDate = value || undefined;
             }
             if (lowerLine.includes('expiry date:') || lowerLine.includes('expires:') || lowerLine.includes('expiration:')) {
-                data.expirationDate = this.extractValue(line);
+                const value = this.extractValue(line);
+                data.expirationDate = value || undefined;
             }
             if (lowerLine.includes('name server:') || lowerLine.includes('nserver:')) {
                 if (!data.nameServers)

@@ -3,7 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkUrl = void 0;
+exports.checkUrlRisk = exports.checkUrl = void 0;
+const validator_1 = __importDefault(require("validator"));
 const urlValidator_1 = require("../utils/urlValidator");
 const virusTotalService_1 = require("../services/virusTotalService");
 const googleSafeBrowsingService_1 = require("../services/googleSafeBrowsingService");
@@ -12,6 +13,7 @@ const sslService_1 = require("../services/sslService");
 const redirectService_1 = require("../services/redirectService");
 const ipinfoService_1 = require("../services/ipinfoService");
 const riskAnalyzer_1 = require("../services/riskAnalyzer");
+const urlRiskChecker_1 = require("../utils/urlRiskChecker");
 const Scan_1 = __importDefault(require("../models/Scan"));
 const checkUrl = async (req, res) => {
     try {
@@ -165,4 +167,38 @@ function generateResultsFromAnalysis(analysis, url) {
     ];
     return results;
 }
+const checkUrlRisk = async (req, res) => {
+    try {
+        const { url } = req.body;
+        if (!url || typeof url !== 'string') {
+            res.status(400).json({
+                success: false,
+                error: 'URL is required and must be a string'
+            });
+            return;
+        }
+        if (!validator_1.default.isURL(url, { require_protocol: true })) {
+            res.status(400).json({
+                success: false,
+                error: 'Invalid URL format'
+            });
+            return;
+        }
+        console.log(`🔍 URL risk check: ${url}`);
+        const result = await (0, urlRiskChecker_1.checkUrlRisk)(url);
+        res.json({
+            verdict: result.verdict,
+            virusTotalData: result.virusTotalData,
+            googleSafeBrowsingData: result.googleSafeBrowsingData
+        });
+    }
+    catch (error) {
+        console.error('Error in checkUrlRisk endpoint:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+};
+exports.checkUrlRisk = checkUrlRisk;
 //# sourceMappingURL=urlController.js.map

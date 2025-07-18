@@ -6,12 +6,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.virusTotalService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const crypto_1 = __importDefault(require("crypto"));
+const env_1 = __importDefault(require("../config/env"));
 class VirusTotalService {
     constructor() {
-        this.apiKey = process.env.VIRUSTOTAL_API_KEY || '';
-        this.baseUrl = process.env.VIRUSTOTAL_API_URL || 'https://www.virustotal.com/vtapi/v2';
+        this.apiKey = env_1.default.VIRUSTOTAL_API_KEY;
+        this.baseUrl = env_1.default.VIRUSTOTAL_API_URL;
+        console.log('🔍 VirusTotal API Key:', this.apiKey ? `${this.apiKey.substring(0, 8)}...` : 'Not found');
         if (!this.apiKey || this.apiKey === 'your_virustotal_api_key_here') {
             console.warn('⚠️ VirusTotal API key not configured. Using mock data.');
+        }
+        else {
+            console.log('✅ VirusTotal API key configured successfully');
         }
     }
     generateUrlId(url) {

@@ -1,0 +1,1 @@
+{"version":3,"file":"urlRiskChecker.d.ts","sourceRoot":"","sources":["../../src/utils/urlRiskChecker.ts"],"names":[],"mappings":"AAGA,MAAM,WAAW,aAAa;IAC5B,OAAO,EAAE,MAAM,GAAG,WAAW,CAAC;IAC9B,cAAc,EAAE,GAAG,CAAC;IACpB,sBAAsB,EAAE,GAAG,CAAC;CAC7B;AAED,wBAAsB,YAAY,CAAC,GAAG,EAAE,MAAM,GAAG,OAAO,CAAC,aAAa,CAAC,CAkCtE"}

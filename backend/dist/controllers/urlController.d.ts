@@ -9,4 +9,5 @@ export interface URLCheckResult {
     category?: 'security' | 'info' | 'technical';
 }
 export declare const checkUrl: (req: Request, res: Response) => Promise<void>;
+export declare const checkUrlRisk: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=urlController.d.ts.map

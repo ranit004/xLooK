@@ -1,8 +1,15 @@
 import { OpenAI } from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
 
 /**
  * Analyze a URL with AI using VirusTotal and Safe Browsing data.
@@ -38,7 +45,7 @@ async function callOpenAI(model: string) {
       role: "user" as const,
       content: prompt
     }];
-    return openai.chat.completions.create({
+    return getOpenAI().chat.completions.create({
       model,
       messages,
       temperature: 0,

@@ -1,15 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-
-// JWT configuration
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
-
-export interface JWTPayload {
-  userId: string;
-  email: string;
-  iat?: number;
-  exp?: number;
-}
 
 /**
  * Extract JWT token from cookies
@@ -19,19 +8,6 @@ function extractTokenFromCookie(request: NextRequest): string | null {
   const token = cookies.get('auth-token')?.value || cookies.get('token')?.value;
   
   return token || null;
-}
-
-/**
- * Verify JWT token and extract user information
- */
-function verifyToken(token: string): JWTPayload | null {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-    return decoded;
-  } catch (error) {
-    console.error('JWT verification error:', error);
-    return null;
-  }
 }
 
 /**

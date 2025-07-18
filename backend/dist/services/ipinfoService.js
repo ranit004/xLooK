@@ -5,12 +5,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ipinfoService = void 0;
 const axios_1 = __importDefault(require("axios"));
+const env_1 = __importDefault(require("../config/env"));
 class IPinfoService {
     constructor() {
-        this.apiKey = process.env.IPINFO_API_KEY || '';
-        this.baseUrl = process.env.IPINFO_API_URL || 'https://ipinfo.io';
+        this.apiKey = env_1.default.IPINFO_API_KEY;
+        this.baseUrl = env_1.default.IPINFO_API_URL;
         if (!this.apiKey || this.apiKey === 'your_ipinfo_api_key_here') {
             console.warn('⚠️ IPinfo API key not configured. Using mock data.');
+        }
+        else {
+            console.log('✅ IPinfo API key configured successfully');
         }
     }
     async getGeolocation(url) {

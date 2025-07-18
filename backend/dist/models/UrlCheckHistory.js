@@ -32,34 +32,50 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const userSchema = new mongoose_1.Schema({
-    email: {
+const urlCheckHistorySchema = new mongoose_1.Schema({
+    userId: {
         type: String,
         required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
         index: true
     },
-    hashedPassword: {
-        type: String,
-        required: true
-    },
-    name: {
+    url: {
         type: String,
         required: true,
         trim: true
     },
-    plan: {
+    domain: {
         type: String,
-        enum: ['free', 'premium', 'pro'],
-        default: 'free'
+        required: true,
+        trim: true
+    },
+    verdict: {
+        type: String,
+        required: true,
+        enum: ['SAFE', 'DANGEROUS', 'WARNING']
+    },
+    virusTotalData: {
+        malicious: { type: Number, default: 0 },
+        phishing: { type: Number, default: 0 },
+        suspicious: { type: Number, default: 0 },
+        harmless: { type: Number, default: 0 },
+        undetected: { type: Number, default: 0 },
+        total: { type: Number, default: 0 },
+        permalink: { type: String }
+    },
+    googleSafeBrowsingData: {
+        threatsFound: { type: Boolean, default: false },
+        matches: { type: [mongoose_1.Schema.Types.Mixed], default: [] }
+    },
+    results: [mongoose_1.Schema.Types.Mixed],
+    aiAnalysis: {
+        verdict: { type: String, enum: ['SAFE', 'DANGEROUS', 'unavailable'], required: true },
+        reason: { type: String, required: true }
+    },
+    checkedAt: {
+        type: Date,
+        default: Date.now
     },
     createdAt: {
         type: Date,
@@ -68,33 +84,9 @@ const userSchema = new mongoose_1.Schema({
 }, {
     versionKey: false
 });
-userSchema.index({ email: 1 });
-userSchema.index({ createdAt: -1 });
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('hashedPassword'))
-        return next();
-    try {
-        const saltRounds = 12;
-        this.hashedPassword = await bcrypt_1.default.hash(this.hashedPassword, saltRounds);
-        next();
-    }
-    catch (error) {
-        next(error);
-    }
-});
-userSchema.methods.comparePassword = async function (password) {
-    return bcrypt_1.default.compare(password, this.hashedPassword);
-};
-userSchema.methods.toJSON = function () {
-    const obj = this.toObject();
-    delete obj._id;
-    delete obj.__v;
-    delete obj.hashedPassword;
-    return obj;
-};
-userSchema.statics.findByEmail = function (email) {
-    return this.findOne({ email }).exec();
-};
-const User = mongoose_1.default.model('User', userSchema);
-exports.default = User;
-//# sourceMappingURL=User.js.map
+urlCheckHistorySchema.index({ userId: 1, createdAt: -1 });
+urlCheckHistorySchema.index({ url: 1, userId: 1 });
+urlCheckHistorySchema.index({ domain: 1, userId: 1 });
+const UrlCheckHistory = mongoose_1.default.model('UrlCheckHistory', urlCheckHistorySchema);
+exports.default = UrlCheckHistory;
+//# sourceMappingURL=UrlCheckHistory.js.map
