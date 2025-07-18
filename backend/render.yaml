@@ -11,11 +11,13 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: CORS_ORIGIN
+      - key: ALLOWED_ORIGIN
         generateValue: true
-      - key: UNSPLASH_ACCESS_KEY
+      - key: MONGO_URI
         generateValue: true
-      - key: MONGODB_URI
+      - key: VIRUSTOTAL_API_KEY
         generateValue: true
-      - key: JWT_SECRET
+      - key: GOOGLE_SAFE_BROWSING_API_KEY
+        generateValue: true
+      - key: IPINFO_API_KEY
         generateValue: true

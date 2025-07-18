@@ -62,10 +62,7 @@ const urlCheckHistorySchema = new Schema<IUrlCheckHistory>({
     threatsFound: { type: Boolean, default: false },
     matches: { type: [Schema.Types.Mixed], default: [] }
   },
-  results: {
-    type: [Schema.Types.Mixed],
-    default: []
-  },
+  results: [Schema.Types.Mixed],
   aiAnalysis: {
     verdict: { type: String, enum: ['SAFE', 'DANGEROUS', 'unavailable'], required: true },
     reason: { type: String, required: true }

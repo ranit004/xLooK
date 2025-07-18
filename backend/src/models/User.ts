@@ -6,6 +6,7 @@ export interface IUser extends Document {
   email: string;
   hashedPassword: string;
   name: string;
+  plan: 'free' | 'premium' | 'pro';
   createdAt: Date;
   comparePassword(password: string): Promise<boolean>;
 }
@@ -27,6 +28,11 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: true,
     trim: true
+  },
+  plan: {
+    type: String,
+    enum: ['free', 'premium', 'pro'],
+    default: 'free'
   },
   createdAt: {
     type: Date,
