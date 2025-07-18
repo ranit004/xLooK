@@ -1,0 +1,47 @@
+{
+  "name": "url-safety-checker-backend",
+  "version": "1.0.0",
+  "description": "Backend server for URL Safety Checker",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "url",
+    "safety",
+    "security",
+    "api",
+    "express",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongodb": "^6.17.0",
+    "mongoose": "^8.16.3",
+    "puppeteer": "^24.12.1",
+    "tls": "^0.0.1",
+    "validator": "^13.15.15",
+    "whois": "^2.15.0"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.9.36",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^20.5.0",
+    "@types/validator": "^13.15.2",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}
