@@ -1,0 +1,48 @@
+{
+  "name": "xlook-backend",
+  "description": "XLook URL Safety Checker Backend API",
+  "repository": "https://github.com/ranit004/xLook",
+  "logo": "https://cdn.jsdelivr.net/npm/heroicons@1.0.6/outline/shield-check.svg",
+  "keywords": ["url", "safety", "security", "api", "express", "typescript"],
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    },
+    "VIRUSTOTAL_API_KEY": {
+      "description": "VirusTotal API key for URL scanning",
+      "value": "259f6c5ba111f2de0b64fd88796afed491b25e86f0954ceccd732ace927aa8ea"
+    },
+    "GOOGLE_SAFE_BROWSING_API_KEY": {
+      "description": "Google Safe Browsing API key",
+      "value": "AIzaSyBlOp2IbU7wbH5P4Klaa2H3gi3qQzQuRf8"
+    },
+    "IPINFO_API_KEY": {
+      "description": "IPInfo API key for IP geolocation",
+      "value": "340008b211ac42"
+    },
+    "MONGO_URI": {
+      "description": "MongoDB connection string",
+      "value": "mongodb+srv://xlook_user:xlook123@cluster0.mongodb.net/xlook?retryWrites=true&w=majority"
+    },
+    "ALLOWED_ORIGIN": {
+      "description": "CORS allowed origin",
+      "value": "https://xlook-8yl048kgu-ranitisking-gmailcoms-projects.vercel.app"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [],
+  "scripts": {
+    "postdeploy": "echo 'XLook Backend deployed successfully!'"
+  }
+}
