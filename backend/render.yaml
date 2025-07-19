@@ -12,12 +12,12 @@ services:
       - key: PORT
         value: 10000
       - key: ALLOWED_ORIGIN
-        generateValue: true
+        value: https://xlook-8yl048kgu-ranitisking-gmailcoms-projects.vercel.app
       - key: MONGO_URI
-        generateValue: true
+        value: mongodb://localhost:27017/url-safety-checker
       - key: VIRUSTOTAL_API_KEY
-        generateValue: true
+        value: 259f6c5ba111f2de0b64fd88796afed491b25e86f0954ceccd732ace927aa8ea
       - key: GOOGLE_SAFE_BROWSING_API_KEY
-        generateValue: true
+        value: AIzaSyBlOp2IbU7wbH5P4Klaa2H3gi3qQzQuRf8
       - key: IPINFO_API_KEY
-        generateValue: true
+        value: 340008b211ac42

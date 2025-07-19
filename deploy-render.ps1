@@ -33,8 +33,8 @@ $serviceConfig = @{
     "env" = "node"
     "region" = "oregon"
     "plan" = "free"
-    "buildCommand" = "cd backend && npm install && npm run build"
-    "startCommand" = "cd backend && npm start"
+    "buildCommand" = "npm install && npm run build"
+    "startCommand" = "npm start"
     "rootDir" = "backend"
     "envVars" = @(
         @{
@@ -47,7 +47,7 @@ $serviceConfig = @{
         },
         @{
             "key" = "ALLOWED_ORIGIN"
-            "value" = "https://xlook-orm7keo62-ranitisking-gmailcoms-projects.vercel.app"
+            "value" = "https://xlook-8yl048kgu-ranitisking-gmailcoms-projects.vercel.app"
         },
         @{
             "key" = "MONGO_URI"
