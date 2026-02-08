@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" fill="url(#bgGradient)"/>
+  
+  <!-- Shield shape -->
+  <path d="M256 40 C120 40 80 80 80 160 C80 320 256 472 256 472 C256 472 432 320 432 160 C432 80 392 40 256 40Z" 
+        fill="none" 
+        stroke="#4c1d95" 
+        stroke-width="12" 
+        stroke-opacity="0.6"/>
+  
+  <!-- Left eye (white) -->
+  <ellipse cx="175" cy="240" rx="70" ry="80" fill="white"/>
+  
+  <!-- Left pupil (dark) -->
+  <ellipse cx="185" cy="250" rx="40" ry="50" fill="#1e1b4b"/>
+  
+  <!-- Left eye highlight -->
+  <circle cx="165" cy="220" r="12" fill="white"/>
+  
+  <!-- Right eye (white) -->
+  <ellipse cx="337" cy="240" rx="70" ry="80" fill="white"/>
+  
+  <!-- Right pupil (dark) -->
+  <ellipse cx="347" cy="250" rx="40" ry="50" fill="#1e1b4b"/>
+  
+  <!-- Right eye highlight -->
+  <circle cx="327" cy="220" r="12" fill="white"/>
+</svg>

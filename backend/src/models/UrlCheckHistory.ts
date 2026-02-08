@@ -84,6 +84,7 @@ urlCheckHistorySchema.index({ userId: 1, createdAt: -1 });
 urlCheckHistorySchema.index({ url: 1, userId: 1 });
 urlCheckHistorySchema.index({ domain: 1, userId: 1 });
 
-const UrlCheckHistory = mongoose.model<IUrlCheckHistory>('UrlCheckHistory', urlCheckHistorySchema);
+// Check if model already exists to prevent OverwriteModelError during hot reloading
+const UrlCheckHistory = mongoose.models.UrlCheckHistory || mongoose.model<IUrlCheckHistory>('UrlCheckHistory', urlCheckHistorySchema);
 
 export default UrlCheckHistory;

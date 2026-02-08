@@ -34,11 +34,11 @@ async function getWhoisData(domain: string): Promise<any> {
     const apiKey = 'at_wLca5HWNUC4uR6nCOn15en0lsV9S4'
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
-    
+
     const response = await fetch(`https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${apiKey}&domainName=${domain}&outputFormat=JSON`, {
       signal: controller.signal
     })
-    
+
     clearTimeout(timeoutId)
 
     if (!response.ok) {
@@ -46,11 +46,11 @@ async function getWhoisData(domain: string): Promise<any> {
     }
 
     const data = await response.json()
-    
+
     if (data && data.WhoisRecord) {
       const whoisRecord = data.WhoisRecord
       const registryData = whoisRecord.registryData || {}
-      
+
       return {
         domain,
         registrar: whoisRecord.registrarName || registryData.registrarName || 'Unknown',
@@ -80,7 +80,7 @@ async function getGeolocationData(domain: string): Promise<any> {
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
-    
+
     // Try multiple geolocation APIs for better reliability
     const APIs = [
       {
@@ -122,7 +122,7 @@ async function getGeolocationData(domain: string): Promise<any> {
         }
       }
     ]
-    
+
     // Try each API until one succeeds
     for (const api of APIs) {
       try {
@@ -132,11 +132,11 @@ async function getGeolocationData(domain: string): Promise<any> {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
           }
         })
-        
+
         if (response.ok) {
           const data = await response.json()
           const parsed = api.parse(data)
-          
+
           if (parsed) {
             clearTimeout(timeoutId)
             return parsed
@@ -147,10 +147,10 @@ async function getGeolocationData(domain: string): Promise<any> {
         // Continue to next API
       }
     }
-    
+
     clearTimeout(timeoutId)
     return { error: 'All geolocation APIs failed' }
-    
+
   } catch (error) {
     console.error('Geolocation lookup failed:', error)
     return { error: 'Geolocation lookup failed' }
@@ -187,7 +187,7 @@ async function getVirusTotalData(url: string): Promise<any> {
     // Note: You need to replace this with your actual VirusTotal API key
     // Get your free API key from: https://www.virustotal.com/gui/join-us
     const apiKey = process.env.VIRUSTOTAL_API_KEY || '259f6c5ba111f2de0b64fd88796afed491b25e86f0954ceccd732ace927aa8ea'
-    
+
     if (!apiKey || apiKey === 'your-virustotal-api-key-here') {
       // Return mock data when API key is not configured
       return {
@@ -197,13 +197,13 @@ async function getVirusTotalData(url: string): Promise<any> {
         error: 'VirusTotal API key not configured. Please set VIRUSTOTAL_API_KEY environment variable.'
       }
     }
-    
+
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
-    
+
     // Use VirusTotal API v3 - encode URL to base64 without padding
     const urlId = Buffer.from(url).toString('base64').replace(/=/g, '')
-    
+
     // Try to get existing scan results first
     const reportResponse = await fetch(`https://www.virustotal.com/api/v3/urls/${urlId}`, {
       headers: {
@@ -211,15 +211,15 @@ async function getVirusTotalData(url: string): Promise<any> {
       },
       signal: controller.signal
     })
-    
+
     clearTimeout(timeoutId)
-    
+
     if (reportResponse.ok) {
       const reportData = await reportResponse.json()
       const stats = reportData.data?.attributes?.last_analysis_stats || {}
-      
+
       const totalEngines = (stats.malicious || 0) + (stats.suspicious || 0) + (stats.undetected || 0) + (stats.harmless || 0)
-      
+
       // If no engines have scanned yet, return a pending status
       if (totalEngines === 0) {
         return {
@@ -229,7 +229,7 @@ async function getVirusTotalData(url: string): Promise<any> {
           error: 'Scan in progress - No threats detected so far'
         }
       }
-      
+
       return {
         positives: stats.malicious || 0,
         total: totalEngines,
@@ -240,7 +240,7 @@ async function getVirusTotalData(url: string): Promise<any> {
     } else if (reportResponse.status === 404) {
       // URL not found, submit for analysis and wait briefly for results
       const submitTimeoutId = setTimeout(() => controller.abort(), 10000)
-      
+
       const submitResponse = await fetch('https://www.virustotal.com/api/v3/urls', {
         method: 'POST',
         headers: {
@@ -250,23 +250,23 @@ async function getVirusTotalData(url: string): Promise<any> {
         body: `url=${encodeURIComponent(url)}`,
         signal: controller.signal
       })
-      
+
       clearTimeout(submitTimeoutId)
-      
+
       if (submitResponse.ok) {
         // Wait a moment and try to get results
         await new Promise(resolve => setTimeout(resolve, 3000))
-        
+
         const retryResponse = await fetch(`https://www.virustotal.com/api/v3/urls/${urlId}`, {
           headers: {
             'x-apikey': apiKey
           }
         })
-        
+
         if (retryResponse.ok) {
           const retryData = await retryResponse.json()
           const stats = retryData.data?.attributes?.last_analysis_stats || {}
-          
+
           return {
             positives: stats.malicious || 0,
             total: (stats.malicious || 0) + (stats.suspicious || 0) + (stats.undetected || 0) + (stats.harmless || 0),
@@ -315,7 +315,7 @@ export interface URLCheckResult {
 export async function POST(request: NextRequest) {
   try {
     const { url } = await request.json()
-    
+
     if (!url) {
       return NextResponse.json(
         { error: 'URL is required' },
@@ -336,7 +336,7 @@ export async function POST(request: NextRequest) {
     // Check if user is authenticated
     const token = request.cookies.get('auth-token')?.value;
     let isAuthenticated = false;
-    
+
     if (token) {
       try {
         jwt.verify(token, JWT_SECRET);
@@ -346,45 +346,32 @@ export async function POST(request: NextRequest) {
         isAuthenticated = false;
       }
     }
-    
-    // If not authenticated, check usage limit
-    if (!isAuthenticated) {
-      const usageCount = parseInt(request.cookies.get('url-check-count')?.value || '0');
-      
-      if (usageCount >= 3) {
-        return NextResponse.json(
-          { 
-            error: 'You have reached the maximum number of URL checks (3) for non-registered users. Please sign up for unlimited checks.',
-            limitReached: true
-          },
-          { status: 429 }
-        );
-      }
-    }
+
+
 
     // Extract domain from URL
     const domain = getDomainFromUrl(url)
-    
+
     // Fetch real data
     const [whoisData, geoData, virusTotalData] = await Promise.all([
       getWhoisData(domain),
       getGeolocationData(domain),
       getVirusTotalData(url)
     ])
-    
+
     // Calculate domain age from WHOIS data
     const domainAge = whoisData.creationDate ? calculateDomainAge(whoisData.creationDate) : 'Unknown'
-    
+
     // Prepare Safe Browsing data (currently mocked)
     const safeBrowsingData = {
       threatsFound: false,
       matches: []
     }
-    
+
     // Get AI analysis
     let aiVerdict: 'SAFE' | 'DANGEROUS' | 'unavailable' = 'SAFE'
     let aiReason = 'No reason provided.'
-    
+
     try {
       const aiAnalysis = await analyzeUrlWithAI(url, virusTotalData, safeBrowsingData)
       aiVerdict = aiAnalysis.aiVerdict
@@ -394,11 +381,11 @@ export async function POST(request: NextRequest) {
       aiVerdict = 'unavailable'
       aiReason = 'AI analysis could not be completed'
     }
-    
+
     // Ensure aiVerdict and aiReason have default values
     if (!aiVerdict) aiVerdict = 'SAFE';
     if (!aiReason) aiReason = 'No reason provided.';
-    
+
     // Determine overall verdict based on analysis (prioritize AI verdict if available)
     let verdict: 'SAFE' | 'DANGEROUS' | 'WARNING' = 'SAFE';
     if (aiVerdict === 'DANGEROUS') {
@@ -406,7 +393,7 @@ export async function POST(request: NextRequest) {
     } else if (virusTotalData.positives > 0) {
       verdict = virusTotalData.positives > 2 ? 'DANGEROUS' : 'WARNING';
     }
-    
+
     // Build results with real data
     const results: URLCheckResult[] = [
       {
@@ -496,14 +483,14 @@ export async function POST(request: NextRequest) {
     try {
       // Extract JWT token from cookies
       const token = request.cookies.get('auth-token')?.value;
-      
+
       if (token) {
         // Verify JWT token
         const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-        
+
         // Connect to MongoDB
         await connectToMongoDB();
-        
+
         // Save to history
         const historyEntry = new UrlCheckHistory({
           userId: decoded.userId,
@@ -523,10 +510,10 @@ export async function POST(request: NextRequest) {
           },
           checkedAt: new Date()
         });
-        
+
         console.log('UrlCheckHistory entry to save:', JSON.stringify(historyEntry, null, 2));
         console.log('AI Analysis data:', { aiVerdict, aiReason });
-        
+
         await historyEntry.save();
         console.log('URL check saved to history for user:', decoded.userId);
       }
@@ -560,20 +547,9 @@ export async function POST(request: NextRequest) {
       url,
       checkedAt: new Date().toISOString()
     })
-    
-    // If user is not authenticated, increment the usage count
-    if (!isAuthenticated) {
-      const currentCount = parseInt(request.cookies.get('url-check-count')?.value || '0');
-      const newCount = currentCount + 1;
-      
-      response.cookies.set('url-check-count', newCount.toString(), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 60 * 60 * 24 * 30 // 30 days
-      });
-    }
-    
+
+
+
     return response
 
   } catch (error) {

@@ -35,10 +35,10 @@ const scanSchema = new Schema<IScan>({
       id: { type: String, required: true },
       title: { type: String, required: true },
       description: { type: String, required: true },
-      status: { 
-        type: String, 
-        enum: ['safe', 'warning', 'danger'], 
-        required: true 
+      status: {
+        type: String,
+        enum: ['safe', 'warning', 'danger'],
+        required: true
       },
       details: String,
       value: String,
@@ -110,7 +110,7 @@ scanSchema.index({ 'result.securityAnalysis.riskAnalysis.overallRisk': 1 });
 scanSchema.index({ createdAt: -1 });
 
 // Add methods to the schema
-scanSchema.methods.toJSON = function() {
+scanSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj._id;
   delete obj.__v;
@@ -118,7 +118,7 @@ scanSchema.methods.toJSON = function() {
 };
 
 // Static method to find recent scans for a URL
-scanSchema.statics.findRecentScans = function(url: string, limit: number = 10) {
+scanSchema.statics.findRecentScans = function (url: string, limit: number = 10) {
   return this.find({ url })
     .sort({ createdAt: -1 })
     .limit(limit)
@@ -126,7 +126,7 @@ scanSchema.statics.findRecentScans = function(url: string, limit: number = 10) {
 };
 
 // Static method to get scan statistics
-scanSchema.statics.getScanStats = function() {
+scanSchema.statics.getScanStats = function () {
   return this.aggregate([
     {
       $group: {
@@ -144,6 +144,7 @@ scanSchema.statics.getScanStats = function() {
   ]);
 };
 
-const Scan = mongoose.model<IScan>('Scan', scanSchema);
+// Check if model already exists to prevent OverwriteModelError during hot reloading
+const Scan = mongoose.models.Scan || mongoose.model<IScan>('Scan', scanSchema);
 
 export default Scan;

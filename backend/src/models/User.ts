@@ -47,9 +47,9 @@ userSchema.index({ email: 1 });
 userSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to hash password
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('hashedPassword')) return next();
-  
+
   try {
     const saltRounds = 12;
     this.hashedPassword = await bcrypt.hash(this.hashedPassword, saltRounds);
@@ -60,12 +60,12 @@ userSchema.pre('save', async function(next) {
 });
 
 // Instance method to compare passwords
-userSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
+userSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
   return bcrypt.compare(password, this.hashedPassword);
 };
 
 // Add methods to the schema
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj._id;
   delete obj.__v;
@@ -74,10 +74,11 @@ userSchema.methods.toJSON = function() {
 };
 
 // Static method to find user by email
-userSchema.statics.findByEmail = function(email: string) {
+userSchema.statics.findByEmail = function (email: string) {
   return this.findOne({ email }).exec();
 };
 
-const User = mongoose.model<IUser>('User', userSchema);
+// Check if model already exists to prevent OverwriteModelError during hot reloading
+const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
 
 export default User;
