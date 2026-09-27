@@ -65,7 +65,7 @@ export function authenticateRequest(request: NextRequest): JWTPayload | null {
  */
 export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: expiresIn as jwt.SignOptions['expiresIn'] });
 }
 
 /**

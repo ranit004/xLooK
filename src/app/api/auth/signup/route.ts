@@ -4,6 +4,9 @@ import * as cookie from 'cookie';
 import bcrypt from 'bcrypt';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // JWT configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -150,7 +153,7 @@ export async function POST(request: NextRequest) {
       userId: newUser.id,
       email: newUser.email
     };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] });
 
     // Create secure httpOnly cookie
     const cookieOptions = {

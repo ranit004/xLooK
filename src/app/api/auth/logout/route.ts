@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cookie from 'cookie';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 interface LogoutResponse {
   success: boolean;
   message: string;

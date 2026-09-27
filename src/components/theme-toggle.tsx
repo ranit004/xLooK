@@ -6,7 +6,11 @@ import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  className?: string
+}
+
+export function ThemeToggle({ className }: ThemeToggleProps = {}) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
 
@@ -46,7 +50,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={cycleTheme}
-      className="h-9 w-9 cursor-pointer"
+      className={className || "h-9 w-9 cursor-pointer"}
     >
       <Sun className={`h-4 w-4 transition-all ${
         theme === "light" ? "rotate-0 scale-100" : "rotate-90 scale-0"

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, JWTPayload } from '../../../../lib/auth-utils';
 import { prisma } from '../../../../lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 interface ProtectedResponse {
   success: boolean;
   message: string;

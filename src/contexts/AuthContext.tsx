@@ -14,7 +14,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  signup: (email: string, password: string, name: string) => Promise<{ success: boolean; message: string }>;
+  signup: (email: string, password: string, name?: string) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -85,15 +85,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name?: string) => {
     try {
+      const userName = name || email.split('@')[0];
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Include cookies
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name: userName }),
       });
 
       const data = await response.json();

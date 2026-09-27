@@ -5,6 +5,9 @@ import jwt from 'jsonwebtoken'
 import prisma from '@/lib/prisma'
 import { analyzeUrlWithAI } from '@/lib/analyzeUrlWithAI'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 const execAsync = promisify(exec)
 
 interface JWTPayload {

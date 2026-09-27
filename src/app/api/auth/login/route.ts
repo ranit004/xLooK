@@ -4,6 +4,9 @@ import jwt from 'jsonwebtoken';
 import * as cookie from 'cookie';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -98,7 +101,7 @@ export async function POST(request: NextRequest) {
     };
 
     const token = jwt.sign(payload, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN
+      expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn']
     });
 
     // Create secure httpOnly cookie
