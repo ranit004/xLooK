@@ -90,6 +90,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ url }),
       })
 
@@ -126,6 +127,23 @@ export default function Home() {
 
     window.addEventListener('clearResults', handleClearResults)
     return () => window.removeEventListener('clearResults', handleClearResults)
+  }, [])
+
+  // Handle hash-based navigation when arriving from another page (e.g., navbar links from /history)
+  useEffect(() => {
+    const hash = window.location.hash?.replace('#', '')
+    if (hash) {
+      // Wait for sections to render then scroll
+      const timer = setTimeout(() => {
+        const el = document.getElementById(hash)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' })
+          // Clear the hash from the URL without triggering a reload
+          window.history.replaceState(null, '', '/')
+        }
+      }, 200)
+      return () => clearTimeout(timer)
+    }
   }, [])
   
   return (

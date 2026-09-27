@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import User from '../../../../../backend/src/models/User';
-import connectToMongoDB from '../../../../../backend/src/db/mongoConnection';
+import prisma from '@/lib/prisma';
 
 interface MeResponse {
   success: boolean;
@@ -53,11 +52,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Connect to database
-    await connectToMongoDB();
+    // Fetch fresh user data from SQLite database
+    const user = await prisma.user.findUnique({
+      where: { id: userPayload.userId }
+    });
 
-    // Fetch fresh user data from database
-    const user = await User.findById(userPayload.userId);
     if (!user) {
       return NextResponse.json<MeResponse>(
         {
@@ -73,7 +72,7 @@ export async function GET(request: NextRequest) {
         success: true,
         message: 'User authenticated',
         user: {
-          userId: user._id.toString(),
+          userId: user.id,
           email: user.email,
           name: user.name,
           createdAt: user.createdAt

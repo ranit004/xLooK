@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import * as cookie from 'cookie';
-import User from '../../../../../backend/src/models/User';
-import connectToMongoDB from '../../../../../backend/src/db/mongoConnection';
+import prisma from '@/lib/prisma';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,11 +63,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to database
-    await connectToMongoDB();
-
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email in SQLite database
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
     
     if (!user) {
       return NextResponse.json<LoginResponse>(
@@ -95,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     // Create JWT token with userId and email
     const payload: JWTPayload = {
-      userId: user._id.toString(),
+      userId: user.id,
       email: user.email
     };
 
@@ -120,7 +118,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Login successful',
         user: {
-          userId: user._id.toString(),
+          userId: user.id,
           email: user.email,
           name: user.name,
           createdAt: user.createdAt

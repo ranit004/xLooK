@@ -4,7 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuItem } from '../ui/dropdown-menu';
-import { LogOut, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
+import { LogOut, ChevronDown, History } from 'lucide-react';
 import { Button } from '../ui/button';
 
 export function UserMenu() {
@@ -59,7 +60,13 @@ export function UserMenu() {
 
       {isOpen && (
         <DropdownMenu>
-          <DropdownMenuItem onClick={handleLogout}>
+          <Link href="/history" onClick={() => setIsOpen(false)}>
+            <DropdownMenuItem className="cursor-pointer">
+              <History className="mr-2 h-4 w-4" />
+              <span>Scan History</span>
+            </DropdownMenuItem>
+          </Link>
+          <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Logout</span>
           </DropdownMenuItem>

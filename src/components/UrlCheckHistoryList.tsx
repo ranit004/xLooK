@@ -2,24 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Shield, 
-  AlertTriangle, 
-  X, 
-  Clock, 
-  ExternalLink, 
+import {
+  Shield,
+  AlertTriangle,
+  X,
+  Clock,
+  ExternalLink,
   ChevronRight,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ShieldCheck,
+  ShieldX
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface UrlCheckHistoryItem {
-  _id: string;
+  id?: string;
+  _id?: string;
   userId: string;
   url: string;
-  domain: string;
+  domain?: string;
   verdict: 'SAFE' | 'DANGEROUS' | 'WARNING';
-  virusTotalData: {
+  scanResults?: {
+    virusTotal?: any;
+    googleSafeBrowsing?: any;
+    whois?: any;
+    aiAnalysis?: any;
+  };
+  virusTotalData?: {
     malicious: number;
     phishing: number;
     suspicious: number;
@@ -28,13 +38,13 @@ interface UrlCheckHistoryItem {
     total: number;
     permalink?: string;
   };
-  googleSafeBrowsingData: {
+  googleSafeBrowsingData?: {
     threatsFound: boolean;
     matches: any[];
   };
-  results: any[];
-  checkedAt: Date;
-  createdAt: Date;
+  results?: any[];
+  checkedAt: string | Date;
+  createdAt?: string | Date;
 }
 
 interface UrlCheckHistoryResponse {
@@ -110,33 +120,36 @@ export default function UrlCheckHistoryList({ onClose }: UrlCheckHistoryListProp
     }
   };
 
-  const getVerdictIcon = (verdict: string) => {
+  const getVerdictConfig = (verdict: string) => {
     switch (verdict) {
       case 'SAFE':
-        return <Shield className="h-5 w-5 text-green-500" />;
+        return {
+          icon: <ShieldCheck className="h-5 w-5 text-emerald-500" />,
+          badgeClass: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30',
+          rowBorder: 'border-l-emerald-500/60',
+        };
       case 'DANGEROUS':
-        return <X className="h-5 w-5 text-red-500" />;
+        return {
+          icon: <ShieldX className="h-5 w-5 text-red-500" />,
+          badgeClass: 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30',
+          rowBorder: 'border-l-red-500/60',
+        };
       case 'WARNING':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return {
+          icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
+          badgeClass: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30',
+          rowBorder: 'border-l-amber-500/60',
+        };
       default:
-        return <Shield className="h-5 w-5 text-gray-500" />;
+        return {
+          icon: <Shield className="h-5 w-5 text-muted-foreground" />,
+          badgeClass: 'bg-muted text-muted-foreground border border-border',
+          rowBorder: 'border-l-border',
+        };
     }
   };
 
-  const getVerdictColor = (verdict: string) => {
-    switch (verdict) {
-      case 'SAFE':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'DANGEROUS':
-        return 'bg-red-50 text-red-700 border-red-200';
-      case 'WARNING':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -148,160 +161,177 @@ export default function UrlCheckHistoryList({ onClose }: UrlCheckHistoryListProp
   };
 
   const getThreatSummary = (item: UrlCheckHistoryItem) => {
-    const threats = item.virusTotalData.malicious + item.virusTotalData.phishing + item.virusTotalData.suspicious;
-    const total = item.virusTotalData.total;
-    
+    const vt = item.scanResults?.virusTotal || item.virusTotalData;
+    if (!vt) return item.verdict === 'SAFE' ? 'Clean' : 'Threat Flagged';
+    const threats = (vt.malicious || 0) + (vt.phishing || 0) + (vt.suspicious || 0);
+    const total = vt.total || 0;
+
     if (threats === 0) {
-      return `Clean (${total} engines)`;
+      return total > 0 ? `Clean (${total} engines)` : 'Clean';
     }
-    return `${threats}/${total} engines flagged`;
+    return `${threats}/${total || 0} engines flagged`;
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-600">Loading history...</span>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-7 w-7 animate-spin text-primary" />
+        <span className="ml-3 text-muted-foreground text-sm">Loading history...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <div className="text-red-600 mb-4">{error}</div>
-        <button
-          onClick={() => fetchHistory(1)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          <RefreshCw className="h-4 w-4 inline mr-2" />
+      <div className="text-center py-16">
+        <p className="text-destructive mb-4 font-medium text-sm">{error}</p>
+        <Button variant="outline" onClick={() => fetchHistory(1)} className="gap-2 text-sm">
+          <RefreshCw className="h-4 w-4" />
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">URL Check History</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+            URL Check History
+          </h2>
+          <p className="mt-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>
             {totalCount} {totalCount === 1 ? 'scan' : 'scans'} total
           </p>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-full hover:bg-accent transition-colors"
+            style={{ color: 'var(--muted-foreground)' }}
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
         )}
       </div>
 
       {history.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <Shield className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-lg mb-2">No URL checks yet</p>
-          <p>Your scan history will appear here once you start checking URLs</p>
+        <div className="text-center py-20">
+          <div
+            className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
+            style={{ background: 'var(--muted)' }}
+          >
+            <Shield className="h-8 w-8" style={{ color: 'var(--muted-foreground)' }} />
+          </div>
+          <p className="text-lg font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+            No URL checks yet
+          </p>
+          <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+            Your scan history will appear here once you start checking URLs
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {history.map((item, index) => (
-            <motion.div
-              key={item._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    {getVerdictIcon(item.verdict)}
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-900 truncate max-w-md">
-                          {item.url}
-                        </span>
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-400 hover:text-blue-500 transition-colors"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </div>
-                      <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {formatDate(item.checkedAt)}
-                        </span>
-                        <span>{getThreatSummary(item)}</span>
-                      </div>
+        <div className="space-y-2">
+          {history.map((item, index) => {
+            const config = getVerdictConfig(item.verdict);
+            return (
+              <motion.div
+                key={item.id || item._id || index}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.25 }}
+              >
+                <div
+                  className={`group flex items-center gap-3 px-4 py-3 rounded-xl border-l-4 ${config.rowBorder} transition-all duration-200 hover:shadow-lg cursor-default`}
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                    borderLeftWidth: '4px',
+                  }}
+                >
+                  {/* Verdict Icon */}
+                  <div className="flex-shrink-0">{config.icon}</div>
+
+                  {/* URL + Meta */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span
+                        className="font-medium text-sm truncate max-w-xs md:max-w-lg"
+                        style={{ color: 'var(--foreground)' }}
+                      >
+                        {item.url}
+                      </span>
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-shrink-0 hover:text-primary transition-colors"
+                        style={{ color: 'var(--muted-foreground)' }}
+                        title="Open URL"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatDate(item.checkedAt)}
+                      </span>
+                      <span>·</span>
+                      <span>{getThreatSummary(item)}</span>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getVerdictColor(item.verdict)}`}>
-                    {item.verdict}
-                  </span>
-                  <ChevronRight className="h-5 w-5 text-gray-400" />
-                </div>
-              </div>
 
-              {item.virusTotalData && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <div className="flex items-center space-x-6 text-sm">
-                    {item.virusTotalData.malicious > 0 && (
-                      <span className="text-red-600">
-                        {item.virusTotalData.malicious} malicious
-                      </span>
-                    )}
-                    {item.virusTotalData.phishing > 0 && (
-                      <span className="text-orange-600">
-                        {item.virusTotalData.phishing} phishing
-                      </span>
-                    )}
-                    {item.virusTotalData.suspicious > 0 && (
-                      <span className="text-yellow-600">
-                        {item.virusTotalData.suspicious} suspicious
-                      </span>
-                    )}
-                    {item.virusTotalData.harmless > 0 && (
-                      <span className="text-green-600">
-                        {item.virusTotalData.harmless} clean
-                      </span>
-                    )}
-                    {item.googleSafeBrowsingData?.threatsFound && (
-                      <span className="text-red-600">
-                        Google Safe Browsing: Threats detected
-                      </span>
-                    )}
+                  {/* Verdict Badge + Arrow */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${config.badgeClass}`}>
+                      {item.verdict}
+                    </span>
+                    <ChevronRight
+                      className="h-4 w-4 group-hover:text-primary transition-colors"
+                      style={{ color: 'var(--muted-foreground)' }}
+                    />
                   </div>
                 </div>
-              )}
-            </motion.div>
-          ))}
+
+                {/* Extra VT Stats */}
+                {item.virusTotalData && (item.virusTotalData.malicious > 0 || item.virusTotalData.phishing > 0 || item.virusTotalData.suspicious > 0) && (
+                  <div
+                    className="mt-1 ml-8 flex flex-wrap gap-3 text-xs px-4 pb-2"
+                    style={{ color: 'var(--muted-foreground)' }}
+                  >
+                    {item.virusTotalData.malicious > 0 && (
+                      <span className="text-red-500 font-medium">{item.virusTotalData.malicious} malicious</span>
+                    )}
+                    {item.virusTotalData.phishing > 0 && (
+                      <span className="text-orange-500 font-medium">{item.virusTotalData.phishing} phishing</span>
+                    )}
+                    {item.virusTotalData.suspicious > 0 && (
+                      <span className="text-amber-500 font-medium">{item.virusTotalData.suspicious} suspicious</span>
+                    )}
+                    {item.googleSafeBrowsingData?.threatsFound && (
+                      <span className="text-red-500 font-medium">GSB: Threats detected</span>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
 
           {hasMore && (
-            <div className="text-center py-6">
-              <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
+            <div className="text-center pt-6">
+              <Button variant="outline" onClick={loadMore} disabled={loadingMore} className="gap-2 text-sm">
                 {loadingMore ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Loading...
                   </>
                 ) : (
                   'Load More'
                 )}
-              </button>
+              </Button>
             </div>
           )}
         </div>

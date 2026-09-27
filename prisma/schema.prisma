@@ -1,0 +1,37 @@
+// Prisma schema for SQLite database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String            @id @default(uuid())
+  name           String
+  email          String            @unique
+  hashedPassword String
+  createdAt      DateTime          @default(now())
+  history        UrlCheckHistory[]
+}
+
+model Scan {
+  id        String   @id @default(uuid())
+  url       String
+  result    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UrlCheckHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url         String
+  verdict     String
+  scanResults String
+  checkedAt   DateTime @default(now())
+}

@@ -37,57 +37,56 @@ const faqData: FaqItem[] = [
     question: "What should I do if a URL is flagged as dangerous?",
     answer: "If a URL is flagged as dangerous, avoid clicking on it. The threat details will show you what type of risk was detected. You can also report false positives if you believe a URL was incorrectly flagged."
   }
-  
 ]
 
 export function FaqSection() {
   const [openItems, setOpenItems] = useState<number[]>([])
 
   const toggleItem = (index: number) => {
-    setOpenItems(prev => 
-      prev.includes(index) 
+    setOpenItems(prev =>
+      prev.includes(index)
         ? prev.filter(i => i !== index)
         : [...prev, index]
     )
   }
 
   return (
-    <section id="faq" className="py-24">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="faq" className="py-24 px-4">
+      <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Frequently Asked Questions
           </h2>
-          <p className="mt-4 text-xl text-gray-600 dark:text-gray-300">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Everything you need to know about URL security checking
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {faqData.map((item, index) => (
             <div
               key={index}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+              className="rounded-xl border border-border/60 bg-card overflow-hidden transition-all duration-200 hover:border-primary/30 hover:shadow-sm"
             >
               <button
                 onClick={() => toggleItem(index)}
-                className="w-full px-6 py-4 text-left focus:outline-none cursor-pointer"
+                className="w-full px-6 py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
               >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-base font-semibold text-foreground">
                     {item.question}
                   </h3>
                   {openItems.includes(index) ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                    <ChevronUp className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                    <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                   )}
                 </div>
               </button>
-              
+
               {openItems.includes(index) && (
-                <div className="px-6 pb-4">
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                <div className="px-6 pb-5 border-t border-border/40 pt-4">
+                  <p className="text-muted-foreground leading-relaxed text-sm">
                     {item.answer}
                   </p>
                 </div>
@@ -95,7 +94,6 @@ export function FaqSection() {
             </div>
           ))}
         </div>
-
       </div>
     </section>
   )
