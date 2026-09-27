@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, JWTPayload } from '../../../../lib/auth-utils';
-import User from '../../../../../backend/src/models/User';
-import connectToMongoDB from '../../../../../backend/src/db/mongoConnection';
+import { prisma } from '../../../../lib/prisma';
 
 interface ProtectedResponse {
   success: boolean;
@@ -15,79 +14,55 @@ interface ProtectedResponse {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user info from middleware (already authenticated)
     const userPayload: JWTPayload | null = getUserFromRequest(request);
-    
+
     if (!userPayload) {
       return NextResponse.json<ProtectedResponse>(
-        {
-          success: false,
-          message: 'Unauthorized - User not authenticated'
-        },
+        { success: false, message: 'Unauthorized - User not authenticated' },
         { status: 401 }
       );
     }
 
-    // Connect to database
-    await connectToMongoDB();
+    const user = await prisma.user.findUnique({
+      where: { id: userPayload.userId },
+    });
 
-    // Fetch user details from database (optional - for fresh data)
-    const user = await User.findById(userPayload.userId);
     if (!user) {
       return NextResponse.json<ProtectedResponse>(
-        {
-          success: false,
-          message: 'User not found'
-        },
+        { success: false, message: 'User not found' },
         { status: 404 }
       );
     }
 
-    // Return protected data
     return NextResponse.json<ProtectedResponse>(
       {
         success: true,
         message: 'Access granted to protected route',
         user: {
-          userId: user._id.toString(),
+          userId: user.id,
           email: user.email,
-          createdAt: user.createdAt
-        }
+          createdAt: user.createdAt,
+        },
       },
       { status: 200 }
     );
-
   } catch (error) {
     console.error('Protected route error:', error);
-    
     return NextResponse.json<ProtectedResponse>(
-      {
-        success: false,
-        message: 'Internal server error'
-      },
+      { success: false, message: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// Handle unsupported methods
 export async function POST() {
-  return NextResponse.json(
-    { message: 'Method not allowed' },
-    { status: 405 }
-  );
+  return NextResponse.json({ message: 'Method not allowed' }, { status: 405 });
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { message: 'Method not allowed' },
-    { status: 405 }
-  );
+  return NextResponse.json({ message: 'Method not allowed' }, { status: 405 });
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { message: 'Method not allowed' },
-    { status: 405 }
-  );
+  return NextResponse.json({ message: 'Method not allowed' }, { status: 405 });
 }
