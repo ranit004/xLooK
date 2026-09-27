@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import * as cookie from 'cookie';
-import User from '../../../../../backend/src/models/User';
-import connectToMongoDB from '../../../../../backend/src/db/mongoConnection';
+import bcrypt from 'bcrypt';
+import prisma from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // JWT configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
@@ -102,7 +105,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Additional password strength validation (optional)
+    // Additional password strength validation
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
@@ -118,11 +121,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to database
-    await connectToMongoDB();
-
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
     if (existingUser) {
       return NextResponse.json<SignupResponse>(
         {
@@ -133,23 +136,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new user (password will be hashed by pre-save middleware)
-    const newUser = new User({
-      name: name.trim(),
-      email: email.toLowerCase(),
-      hashedPassword: password, // This will be hashed by the pre-save middleware
-      createdAt: new Date()
-    });
+    // Hash password securely
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Save user to database
-    await newUser.save();
+    // Create new user in SQLite database
+    const newUser = await prisma.user.create({
+      data: {
+        name: name.trim(),
+        email: email.toLowerCase(),
+        hashedPassword
+      }
+    });
 
     // Generate JWT token for immediate login
     const payload = {
-      userId: newUser._id.toString(),
+      userId: newUser.id,
       email: newUser.email
     };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] });
 
     // Create secure httpOnly cookie
     const cookieOptions = {
@@ -162,13 +166,13 @@ export async function POST(request: NextRequest) {
 
     const serializedCookie = cookie.serialize('auth-token', token, cookieOptions);
 
-    // Return success response (exclude password hash)
+    // Return success response
     const response = NextResponse.json<SignupResponse>(
       {
         success: true,
         message: 'User created successfully',
         user: {
-          userId: newUser._id.toString(),
+          userId: newUser.id,
           name: newUser.name,
           email: newUser.email,
           createdAt: newUser.createdAt

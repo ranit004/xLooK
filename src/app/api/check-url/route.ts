@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import jwt from 'jsonwebtoken'
-import UrlCheckHistory from '../../../../backend/src/models/UrlCheckHistory'
-import connectToMongoDB from '../../../../backend/src/db/mongoConnection'
+import prisma from '@/lib/prisma'
 import { analyzeUrlWithAI } from '@/lib/analyzeUrlWithAI'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const execAsync = promisify(exec)
 
@@ -488,33 +490,29 @@ export async function POST(request: NextRequest) {
         // Verify JWT token
         const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
 
-        // Connect to MongoDB
-        await connectToMongoDB();
-
-        // Save to history
-        const historyEntry = new UrlCheckHistory({
-          userId: decoded.userId,
-          url: url,
-          domain: domain,
-          verdict: verdict,
-          scanResults: {
-            whois: whoisData,
-            virusTotal: virusTotalData,
-            geolocation: geoData,
-            domainAge: domainAge,
-            aiAnalysis: {
-              verdict: aiVerdict,
-              reason: aiReason
-            },
-            results: results
+        const scanResultsObj = {
+          whois: whoisData,
+          virusTotal: virusTotalData,
+          geolocation: geoData,
+          domainAge: domainAge,
+          aiAnalysis: {
+            verdict: aiVerdict,
+            reason: aiReason
           },
-          checkedAt: new Date()
+          results: results
+        };
+
+        // Save to SQLite history via Prisma
+        await prisma.urlCheckHistory.create({
+          data: {
+            userId: decoded.userId,
+            url: url,
+            verdict: verdict,
+            scanResults: JSON.stringify(scanResultsObj),
+            checkedAt: new Date()
+          }
         });
 
-        console.log('UrlCheckHistory entry to save:', JSON.stringify(historyEntry, null, 2));
-        console.log('AI Analysis data:', { aiVerdict, aiReason });
-
-        await historyEntry.save();
         console.log('URL check saved to history for user:', decoded.userId);
       }
     } catch (historyError) {

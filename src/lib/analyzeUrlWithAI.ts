@@ -1,38 +1,29 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-let genAI: GoogleGenerativeAI | null = null;
+let groqClient: Groq | null = null;
 
-function getGemini(): GoogleGenerativeAI {
-  if (!genAI) {
-    const apiKey = process.env.GEMINI_API_KEY;
+function getGroq(): Groq {
+  if (!groqClient) {
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not configured");
+      throw new Error("GROQ_API_KEY is not configured");
     }
-    genAI = new GoogleGenerativeAI(apiKey);
+    groqClient = new Groq({ apiKey });
   }
-  return genAI;
+  return groqClient;
 }
-
-// Helper function to wait
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * Analyze a URL with AI using VirusTotal and Safe Browsing data.
- * @param url The original URL (will be sanitized, not raw)
- * @param virusTotalData VirusTotal scan data (summary)
- * @param safeBrowsingData Google Safe Browsing data (summary)
- * @returns AI verdict and reason
+ * Uses openai/gpt-oss-120b exclusively via Groq.
  */
 export async function analyzeUrlWithAI(
   url: string,
   virusTotalData: { positives: number; total: number },
   safeBrowsingData: { threatsFound: boolean }
 ): Promise<{ aiVerdict: "DANGEROUS" | "SAFE"; reason: string }> {
-  // Sanitize URL to only include domain info to avoid raw URLs
-  const urlObj = new URL(url);
-  const sanitizedUrl = urlObj.hostname;
+  const sanitizedUrl = new URL(url).hostname;
 
-  // Compose prompt
   const prompt = `Analyze this URL for security threats.
 
 Domain: ${sanitizedUrl}
@@ -45,77 +36,63 @@ Respond in this exact format:
 VERDICT: [DANGEROUS or SAFE]
 REASON: [Brief explanation]`;
 
-  async function callGemini(modelName: string, retries = 2): Promise<string> {
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const model = getGemini().getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-      } catch (error: any) {
-        console.error(`Gemini ${modelName} attempt ${attempt + 1} failed:`, error.message);
+  try {
+    console.log("Analyzing URL with openai/gpt-oss-120b via Groq...");
 
-        // Check for rate limit errors and retry after delay
-        if (error.message?.includes("429") || error.message?.includes("retry") || error.message?.includes("RESOURCE_EXHAUSTED")) {
-          if (attempt < retries) {
-            console.log(`Rate limited, waiting 5 seconds before retry...`);
-            await delay(5000);
-            continue;
-          }
-        }
-        throw error;
-      }
+    const completion = await getGroq().chat.completions.create({
+      model: "openai/gpt-oss-120b",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a cybersecurity expert. Analyze URLs for threats and respond in the exact format requested.",
+        },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 256,
+      temperature: 0.2,
+    });
+
+    const responseText = completion.choices[0]?.message?.content ?? "";
+
+    // Parse structured response
+    const verdictMatch = responseText.match(/VERDICT:\s*(DANGEROUS|SAFE)/i);
+    const reasonMatch = responseText.match(/REASON:\s*(.+)/i);
+
+    if (verdictMatch) {
+      const aiVerdict =
+        verdictMatch[1].toUpperCase() === "DANGEROUS" ? "DANGEROUS" : "SAFE";
+      const reason =
+        reasonMatch?.[1]?.trim() || responseText.trim() || "Analysis complete.";
+      console.log(`GPT OSS 120B verdict: ${aiVerdict}`);
+      return { aiVerdict, reason };
     }
-    throw new Error("All retries exhausted");
-  }
 
-  // Models to try in order - gemma models have separate quota limits
-  const models = ["gemma-3-12b-it", "gemini-2.0-flash-001", "gemini-2.5-flash-preview-05-20"];
-
-  for (const modelName of models) {
-    try {
-      console.log(`Trying AI analysis with model: ${modelName}`);
-      const responseText = await callGemini(modelName);
-
-      // Parse response
-      const verdictMatch = responseText.match(/VERDICT:\s*(DANGEROUS|SAFE)/i);
-      const reasonMatch = responseText.match(/REASON:\s*(.+)/i);
-
-      if (verdictMatch) {
-        const aiVerdict = verdictMatch[1].toUpperCase() === "DANGEROUS" ? "DANGEROUS" : "SAFE";
-        const reason = reasonMatch?.[1]?.trim() || responseText.trim() || "Analysis complete.";
-        console.log(`AI Analysis success: ${aiVerdict}`);
-        return { aiVerdict, reason };
-      }
-
-      // Fallback parsing for unstructured responses
-      const simpleMatch = responseText.match(/\b(DANGEROUS|SAFE)\b/i);
-      if (simpleMatch) {
-        const aiVerdict = simpleMatch[1].toUpperCase() === "DANGEROUS" ? "DANGEROUS" : "SAFE";
-        const reason = responseText.replace(simpleMatch[0], "").trim() || "Analysis complete.";
-        return { aiVerdict, reason };
-      }
-
-      console.log(`Model ${modelName} returned unparseable response, trying next model...`);
-    } catch (error: any) {
-      console.error(`Model ${modelName} failed:`, error.message);
-      // Continue to next model
+    // Fallback parsing for unstructured responses
+    const simpleMatch = responseText.match(/\b(DANGEROUS|SAFE)\b/i);
+    if (simpleMatch) {
+      const aiVerdict =
+        simpleMatch[1].toUpperCase() === "DANGEROUS" ? "DANGEROUS" : "SAFE";
+      const reason =
+        responseText.replace(simpleMatch[0], "").trim() || "Analysis complete.";
+      return { aiVerdict, reason };
     }
-  }
 
-  // All models failed - provide a heuristic-based fallback
-  console.log("All AI models failed, using heuristic analysis");
+    throw new Error("Could not parse model response");
+  } catch (error: any) {
+    console.error("GPT OSS 120B analysis failed:", error.message);
 
-  // Use VirusTotal and Safe Browsing data for heuristic verdict
-  if (virusTotalData.positives > 0 || safeBrowsingData.threatsFound) {
+    // Heuristic fallback if the API call itself fails
+    if (virusTotalData.positives > 0 || safeBrowsingData.threatsFound) {
+      return {
+        aiVerdict: "DANGEROUS",
+        reason: `Security scan detected ${virusTotalData.positives} threats. Exercise caution.`,
+      };
+    }
+
     return {
-      aiVerdict: "DANGEROUS",
-      reason: `Security scan detected ${virusTotalData.positives} threats. Exercise caution.`
+      aiVerdict: "SAFE",
+      reason: "No threats detected by security scanners.",
     };
   }
-
-  return {
-    aiVerdict: "SAFE",
-    reason: "No threats detected by security scanners."
-  };
 }

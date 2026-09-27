@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — never commit secrets
+.env
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -43,4 +45,11 @@ next-env.d.ts
 # clerk configuration (can include secrets)
 /.clerk/
 
-.vercel
+# database files — local SQLite DB contains user data
+prisma/*.db
+prisma/*.db-journal
+*.sqlite
+*.sqlite3
+
+# backend folder (legacy — removed, using Next.js API routes)
+/backend/

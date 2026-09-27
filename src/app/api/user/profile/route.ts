@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, requireAuth } from '../../../../lib/auth-utils';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 interface ProfileResponse {
   success: boolean;
   message: string;

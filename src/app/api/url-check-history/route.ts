@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import UrlCheckHistory from '../../../../backend/src/models/UrlCheckHistory';
-import connectToMongoDB from '../../../../backend/src/db/mongoConnection';
+import prisma from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 interface HistoryResponse {
   success: boolean;
@@ -49,30 +51,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Connect to database
-    await connectToMongoDB();
-
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
-    const sortBy = searchParams.get('sortBy') || 'createdAt';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() as 'asc' | 'desc';
 
-    // Build sort object
-    const sort: any = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
-    // Fetch user's URL check history
-    const [historyData, totalCount] = await Promise.all([
-      UrlCheckHistory.find({ userId: userPayload.userId })
-        .sort(sort)
-        .limit(limit)
-        .skip(offset)
-        .select('-__v')
-        .lean(),
-      UrlCheckHistory.countDocuments({ userId: userPayload.userId })
+    // Fetch user's URL check history from SQLite database
+    const [historyDataRaw, totalCount] = await Promise.all([
+      prisma.urlCheckHistory.findMany({
+        where: { userId: userPayload.userId },
+        orderBy: { checkedAt: sortOrder },
+        take: limit,
+        skip: offset
+      }),
+      prisma.urlCheckHistory.count({
+        where: { userId: userPayload.userId }
+      })
     ]);
+
+    // Parse scanResults JSON strings back into objects
+    const historyData = historyDataRaw.map(item => ({
+      ...item,
+      scanResults: item.scanResults ? JSON.parse(item.scanResults) : null
+    }));
 
     return NextResponse.json<HistoryResponse>(
       {
