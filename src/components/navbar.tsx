@@ -39,7 +39,7 @@ export function Navbar() {
         {/* Logo — Left */}
         <div className="flex-1">
           <Link href="/" className="flex items-center gap-0.5 w-fit hover:opacity-90 transition-opacity group">
-            <span className="text-2xl font-extrabold tracking-tight leading-none text-white">
+            <span className="text-2xl font-extrabold tracking-tight leading-none text-foreground">
               <span>XL</span>
               <span className="inline-block mx-0.5 blink select-none" aria-hidden="true">👀</span>
               <span>k</span>
@@ -90,14 +90,6 @@ export function Navbar() {
                       className="font-medium border-border/60 hover:bg-accent hover:border-primary/40 transition-all duration-150"
                     >
                       Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/signup">
-                    <Button
-                      size="sm"
-                      className="font-medium bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white border-0 shadow-sm transition-all duration-150"
-                    >
-                      Sign Up
                     </Button>
                   </Link>
                 </div>
