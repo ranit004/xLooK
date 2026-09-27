@@ -1,4 +1,4 @@
-// Prisma schema for SQLite database
+// Prisma schema for PostgreSQL database
 
 generator client {
   provider      = "prisma-client-js"
@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

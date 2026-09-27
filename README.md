@@ -12,7 +12,7 @@
 - 🔍 **Google Safe Browsing** — detects phishing & malware in real time
 - 🤖 **AI Analysis** — uses `openai/gpt-oss-120b` via Groq for contextual verdict
 - 📜 **Scan History** — logged-in users get a full history of all their URL checks
-- 🌙 **Dark / Light mode** — system-aware theme with smooth toggle
+- 🌙 **Dark / Light mode** — system-aware theme with smooth toggle and theme-aware logo
 - 🔐 **Auth** — JWT-based signup/login with httpOnly cookies
 
 ---
@@ -24,7 +24,7 @@
 | Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS v4 + shadcn/ui |
-| Database | SQLite via Prisma ORM |
+| Database | PostgreSQL (Neon Cloud DB) via Prisma ORM |
 | Auth | JWT + httpOnly cookies + bcrypt |
 | AI | Groq API — `openai/gpt-oss-120b` |
 | Animations | Framer Motion |
@@ -57,7 +57,7 @@ src/
     ├── jwt.ts               ← Token helpers
     └── auth-utils.ts        ← Request auth helpers
 prisma/
-└── schema.prisma       ← User + UrlCheckHistory models
+└── schema.prisma       ← User + UrlCheckHistory models (PostgreSQL)
 scripts/                ← Dev/test utility scripts
 ```
 
@@ -68,8 +68,8 @@ scripts/                ← Dev/test utility scripts
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/your-username/xlook.git
-cd xlook
+git clone https://github.com/ranit004/xLooK.git
+cd xLooK
 npm install
 ```
 
@@ -84,8 +84,8 @@ cp .env.example .env
 Fill in your values:
 
 ```env
-# Database (SQLite — auto-created)
-DATABASE_URL="file:./prisma/dev.db"
+# Database (PostgreSQL via Neon)
+DATABASE_URL="postgresql://neondb_owner:...@ep-...neon.tech/neondb?sslmode=require"
 
 # Auth
 JWT_SECRET="your-strong-random-secret-min-64-chars"
@@ -135,7 +135,6 @@ Open [http://localhost:3000](http://localhost:3000)
 - Auth tokens stored in `httpOnly` cookies (XSS-safe)
 - JWT secret is a 128-char random hex string
 - No secrets exposed via `NEXT_PUBLIC_` env vars
-- SQLite `dev.db` is gitignored (contains user data)
 - All API keys only read via `process.env` server-side
 
 ---
